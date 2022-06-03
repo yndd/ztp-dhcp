@@ -16,7 +16,7 @@ import (
 // ZtpServer is the ZTP Server
 type ZtpServer struct {
 	backend       backend.DhcpBackend
-	deviceManager devices.DeviceManagerInterf
+	deviceManager devices.DeviceManagerHandler
 	settings      *ZtpSettings
 }
 
@@ -29,112 +29,80 @@ type ZtpSettings struct {
 func NewZtpServer(backend backend.DhcpBackend, ztpSettings *ZtpSettings) *ZtpServer {
 	return &ZtpServer{
 		backend:       backend,
-		deviceManager: devices.DeviceManager,
+		deviceManager: devices.GetDeviceManagerHandler(),
 		settings:      ztpSettings,
 	}
 }
 
 // handler is called whenever a Packet is received on the socket that the DHCP server is bound to
 // from here we branch into handling the different message types and generate the responses
-func (z *ZtpServer) handler(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
+func (z *ZtpServer) handler(conn net.PacketConn, peer net.Addr, req *dhcpv4.DHCPv4) {
 	// this function will just print the received DHCPv4 message, without replying
-	if m == nil {
+	if req == nil {
 		log.Warn("Packet is nil!")
 		return
 	}
-	if m.OpCode != dhcpv4.OpcodeBootRequest {
+	if req.OpCode != dhcpv4.OpcodeBootRequest {
 		log.Warn("Not a BootRequest!")
 		return
 	}
 
-	log.Debug("Received Paket:")
-	log.Debug(m.Summary())
-	log.Debugf("<%s>", base64.StdEncoding.EncodeToString(m.ToBytes()))
+	log.Infof("received DHCP %s Packet from %s", req.MessageType().String(), req.ClientHWAddr)
+	log.Debug(req.Summary())
+	log.Debugf("<%s>", base64.StdEncoding.EncodeToString(req.ToBytes()))
 
 	var reply *dhcpv4.DHCPv4
 	var err error
 
-	// figure out if DHCP Offer (handleDiscover) or
-	// DHCP Ack (handleRequest) is to be send
-	switch m.MessageType() {
-	case dhcpv4.MessageTypeDiscover:
-		reply, err = z.handleDiscover(conn, peer, m)
-	case dhcpv4.MessageTypeRequest:
-		reply, err = z.handleRequest(conn, peer, m)
-	default:
-		z.fallbackHandler(conn, peer, m)
-	}
+	ciresult, err := GetClientIdentifier(req)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("no ClientIdentifier attached to DHCP Packet from %s", req.ClientHWAddr)
 		return
 	}
 
+	deviceInfo, err := z.backend.GetDeviceInformation(ciresult)
+	if err != nil {
+		log.Errorf("no DeviceInformation found for %s", ciresult.String())
+		return
+	} else {
+		log.Infof("client identified as Name: %s, Model: %s, CIDR: %s", deviceInfo.Name, deviceInfo.Model, deviceInfo.CIDR)
+	}
+
+	device, err := z.deviceManager.GetModelHandler(deviceInfo.Model)
+	if err != nil {
+		log.Errorf("no modelhandler found for %s", deviceInfo.Model)
+		return
+	}
+
+	// figure out if DHCP Offer (handleDiscover) or
+	// DHCP Ack (handleRequest) is to be send
+	switch req.MessageType() {
+	case dhcpv4.MessageTypeDiscover:
+		log.Infof("Create DHCP Offer for %s", req.ClientHWAddr)
+		reply, err = createReply(req, dhcpv4.MessageTypeOffer, z.settings.LeaseTime, deviceInfo)
+		if err != nil {
+			log.Error(err)
+		}
+	case dhcpv4.MessageTypeRequest:
+		log.Infof("create DHCP Ack for %s", req.ClientHWAddr)
+		reply, err = createReply(req, dhcpv4.MessageTypeAck, z.settings.LeaseTime, deviceInfo)
+		if err != nil {
+			log.Error(err)
+		}
+	default:
+		z.fallbackHandler(conn, peer, req)
+		return
+	}
+
+	// call the device specific handlers
+	device.AdjustReply(req, reply, deviceInfo)
+
+	log.Infof("sending %s to %s", reply.MessageType().String(), reply.ClientHWAddr)
+	log.Debugf("REPLY: %s", reply.Summary())
 	// push reply to wire
 	if _, err := conn.WriteTo(reply.ToBytes(), peer); err != nil {
 		log.Printf("Cannot reply to client: %v", err)
 	}
-	log.Debugf("REPLY: %s", reply.Summary())
-}
-
-// handleDiscover handles DHCPDISCOVER messages and crafts a DHCPACK in response
-func (z *ZtpServer) handleDiscover(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) (*dhcpv4.DHCPv4, error) {
-	log.Info("DiscoverHandler - Start")
-
-	//log.Print(m.ClassIdentifier())
-	//ci := m.Options.Get(dhcpv4.OptionClientIdentifier)
-
-	//vendor_data, err := ztpv4.ParseVendorData(m)
-	//if err != nil {
-	//	log.Error(err)
-	// return nil, err
-	//}
-
-	//println("ClassID: %s %s %s", vendor_data.VendorName, vendor_data.Model, vendor_data.Serial)
-
-	log.Info("CLIENTIDENT")
-	ciresult, err := GetClientIdentifier(m)
-	if err != nil {
-		// no ClientIdentifier present or error happened
-		return nil, err
-	}
-
-	deviceInfo, err := z.backend.GetDeviceInformation(ciresult)
-	if err != nil {
-		return nil, err
-	}
-
-	// create a reply from the request
-	reply, err := createReply(m, dhcpv4.MessageTypeOffer, z.settings.LeaseTime, deviceInfo)
-	if err != nil {
-		log.Error(err)
-	}
-
-	log.Info("DiscoverHandler - Done")
-	return reply, nil
-}
-
-// handleRequest handles DHCPREQUEST messages and crafts a DHCPACK in response
-func (z *ZtpServer) handleRequest(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) (*dhcpv4.DHCPv4, error) {
-	log.Info("RequestHandler - Start")
-
-	ciresult, err := GetClientIdentifier(m)
-	if err != nil {
-		// no ClientIdentifier present or error happened
-		return nil, err
-	}
-
-	deviceInfo, err := z.backend.GetDeviceInformation(ciresult)
-	if err != nil {
-		return nil, err
-	}
-
-	// create a reply from the request
-	reply, err := createReply(m, dhcpv4.MessageTypeAck, z.settings.LeaseTime, deviceInfo)
-	if err != nil {
-		log.Error(err)
-	}
-	log.Info("RequestHandler - Done")
-	return reply, nil
 }
 
 // StartDHCPServer instantiates the socket, binds it to the given interface if ifname != "" and
@@ -164,9 +132,9 @@ func (z *ZtpServer) StartDHCPServer(serverport int, ifname string) {
 }
 
 // createReply create a DHCP Reply from a Request.
-func createReply(m *dhcpv4.DHCPv4, messageType dhcpv4.MessageType, leaseTime uint32, deviceInfo *structs.DeviceInformation) (*dhcpv4.DHCPv4, error) {
+func createReply(req *dhcpv4.DHCPv4, messageType dhcpv4.MessageType, leaseTime uint32, deviceInfo *structs.DeviceInformation) (*dhcpv4.DHCPv4, error) {
 	// Create the reply from the request
-	reply, err := dhcpv4.NewReplyFromRequest(m)
+	reply, err := dhcpv4.NewReplyFromRequest(req)
 	if err != nil {
 		log.Printf("NewReplyFromRequest failed: %v", err)
 		return nil, err
@@ -179,7 +147,7 @@ func createReply(m *dhcpv4.DHCPv4, messageType dhcpv4.MessageType, leaseTime uin
 	// Parse CIDR information
 	clientip, clientnetmask, err := net.ParseCIDR(deviceInfo.CIDR)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing CIDR (%s): %v", deviceInfo.CIDR, err)
+		return nil, fmt.Errorf("error parsing CIDR (%s): %v", deviceInfo.CIDR, err)
 	}
 	// Fill in the to be offered client ip
 	dhcpv4.WithYourIP(clientip)(reply)

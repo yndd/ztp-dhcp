@@ -13,6 +13,6 @@ func NewZtpK8sBackend() *ZtpK8sBackend {
 	return &ZtpK8sBackend{}
 }
 
-func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifierResult) (*structs.DeviceInformation, error) {
+func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error) {
 	return nil, nil
 }

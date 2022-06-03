@@ -1,6 +1,10 @@
 package static
 
 import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/yndd/ztp-dhcp/pkg/backend"
 	"github.com/yndd/ztp-dhcp/pkg/structs"
@@ -12,12 +16,22 @@ type ZtpStaticBackend struct {
 
 func NewZtpStaticBackend() *ZtpStaticBackend {
 	log.Infof("Instantiating ZtpStaticBackend")
-	return &ZtpStaticBackend{
+	backend := &ZtpStaticBackend{
 		datastore: map[string]*structs.DeviceInformation{},
 	}
+
+	// using the ENV var to provide static config content
+	if val, exists := os.LookupEnv("YNDD_ZTP_STATIC_DATASTORE_SOURCE"); exists {
+		err := backend.loadDataStoreFromFile(val)
+		if err != nil {
+			log.Errorf("error loading static backend data from %s - %v", val, err)
+		}
+	}
+
+	return backend
 }
 
-func (f *ZtpStaticBackend) GetDeviceInformation(cir *structs.ClientIdentifierResult) (*structs.DeviceInformation, error) {
+func (f *ZtpStaticBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error) {
 	val, exists := f.datastore[cir.Value]
 	if !exists {
 		return nil, backend.ErrDeviceNotFound
@@ -25,6 +39,33 @@ func (f *ZtpStaticBackend) GetDeviceInformation(cir *structs.ClientIdentifierRes
 	return val, nil
 }
 
-func (f *ZtpStaticBackend) AddEntry(cir *structs.ClientIdentifierResult, di *structs.DeviceInformation) {
+func (f *ZtpStaticBackend) AddEntry(cir *structs.ClientIdentifier, di *structs.DeviceInformation) {
 	f.datastore[cir.Value] = di
+}
+
+func (f *ZtpStaticBackend) loadDataStoreFromFile(path string) error {
+	// construct absolute path from the provided path
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+	// read the file
+	data, err := os.ReadFile(absPath)
+	if err != nil {
+		return err
+	}
+	backendDatastore := &structs.StaticBackendDatastore{}
+	// unmarshal the data
+	err = json.Unmarshal(data, backendDatastore)
+	if err != nil {
+		return err
+	}
+
+	// add the entries to the StaticBackend
+	for _, x := range backendDatastore.Datastore {
+		f.AddEntry(x.ClientIdentifier, x.DeviceInformation)
+		log.Debugf("adding %s to static Datastore", x.DeviceInformation.MacAddress)
+	}
+
+	return nil
 }

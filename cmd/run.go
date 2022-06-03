@@ -9,7 +9,6 @@ import (
 	"github.com/yndd/ztp-dhcp/pkg/backend/static"
 	_ "github.com/yndd/ztp-dhcp/pkg/devices/all"
 	"github.com/yndd/ztp-dhcp/pkg/dhcp"
-	"github.com/yndd/ztp-dhcp/pkg/structs"
 )
 
 var (
@@ -30,37 +29,7 @@ var runCmd = &cobra.Command{
 
 		// prepare the static Backend
 		backend := static.NewZtpStaticBackend()
-		// add an entry to the backend
-		backend.AddEntry(
-			&structs.ClientIdentifierResult{
-				CIType: 0,
-				Value:  "this is the identifier",
-			},
-			&structs.DeviceInformation{
-				Name:              "MyFunnyTestDevice",
-				MacAddress:        "b6:8d:0b:94:62:8d",
-				ExpectedSWVersion: "5.4.2",
-				CIDR:              "192.168.50.33/24",
-				SerialNumber:      "666",
-				NtpServersV4:      []string{"1.2.3.4"},
-				DnsServersV4:      []string{"8.8.8.8"},
-			},
-		)
-		backend.AddEntry(
-			&structs.ClientIdentifierResult{
-				CIType: 1,
-				Value:  "b6:8d:0b:94:62:8d",
-			},
-			&structs.DeviceInformation{
-				Name:              "MyFunnyTestDevice",
-				MacAddress:        "b6:8d:0b:94:62:8d",
-				ExpectedSWVersion: "5.4.2",
-				CIDR:              "192.168.50.33/24",
-				SerialNumber:      "666",
-				NtpServersV4:      []string{"1.2.3.4"},
-				DnsServersV4:      []string{"8.8.8.8"},
-			},
-		)
+
 		// setup the server
 		ztpserver := dhcp.NewZtpServer(backend, &dhcp.ZtpSettings{LeaseTime: leaseTime})
 		// execute the server

@@ -15,15 +15,15 @@ const (
 	MAC
 )
 
-// ClientIdentifierResult is the struct to deliver the result of the Option 61 parsing
-type ClientIdentifierResult struct {
+// ClientIdentifier is the struct to deliver the result of the Option 61 parsing
+type ClientIdentifier struct {
 	CIType CITypeEnum `json:"type"`
 	Value  string     `json:"value"`
 }
 
 // String provides a string representation of the ClientIdentifierResult
 // actually that is mapped to its json encoding
-func (cir *ClientIdentifierResult) String() string {
+func (cir *ClientIdentifier) String() string {
 	result, err := json.Marshal(cir)
 	if err != nil {
 		log.Errorf("Error marshalling ClientIdentifierResult: %v", err)

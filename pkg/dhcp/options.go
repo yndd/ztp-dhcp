@@ -16,7 +16,7 @@ var ErrNoClientIdentifier = errors.New("no ClientIdentifier present")
 // GetClientIdentifier is used to retrieve the
 // Option 61 (ClientIdentifier) from the given dhcp paket.
 // NoClientIdentifierError is thrown when no Option 61 is present
-func GetClientIdentifier(m *dhcpv4.DHCPv4) (*structs.ClientIdentifierResult, error) {
+func GetClientIdentifier(m *dhcpv4.DHCPv4) (*structs.ClientIdentifier, error) {
 	log.Debug("Calling getClientIdentifier()")
 	// retrieve the option parameter as
 	ci := m.Options.Get(dhcpv4.OptionClientIdentifier)
@@ -27,7 +27,7 @@ func GetClientIdentifier(m *dhcpv4.DHCPv4) (*structs.ClientIdentifierResult, err
 	}
 
 	// create the ClientIdentifierResult struct
-	cir := &structs.ClientIdentifierResult{}
+	cir := &structs.ClientIdentifier{}
 
 	switch ci[0] {
 	case uint8(1): // Type 1 indicates that a MAC address is present in Option 61

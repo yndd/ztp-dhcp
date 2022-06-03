@@ -17,7 +17,7 @@ func TestDhcp(t *testing.T) {
 	staticBackend := static.NewZtpStaticBackend()
 	// add an entry to the backend
 	staticBackend.AddEntry(
-		&structs.ClientIdentifierResult{
+		&structs.ClientIdentifier{
 			CIType: 0,
 			Value:  "this is the identifier",
 		},
@@ -32,7 +32,7 @@ func TestDhcp(t *testing.T) {
 		},
 	)
 	staticBackend.AddEntry(
-		&structs.ClientIdentifierResult{
+		&structs.ClientIdentifier{
 			CIType: 1,
 			Value:  "b6:8d:0b:94:62:8d",
 		},

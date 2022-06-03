@@ -8,7 +8,7 @@ import (
 
 type DhcpBackend interface {
 	// GetDeviceInformation
-	GetDeviceInformation(cir *structs.ClientIdentifierResult) (*structs.DeviceInformation, error)
+	GetDeviceInformation(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error)
 }
 
 var ErrDeviceNotFound = errors.New("device not found")
