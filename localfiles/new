@@ -1,0 +1,6 @@
+interface "client_a" {
+  send host-name concat(gethostname(), "-WiFi");
+}
+fgsdfgdsf
+ fdg sdfg
+r fgsd fgsdf
