@@ -22,6 +22,7 @@ func NewZtpStaticBackend() *ZtpStaticBackend {
 
 	// using the ENV var to provide static config content
 	if val, exists := os.LookupEnv("YNDD_ZTP_STATIC_DATASTORE_SOURCE"); exists {
+		log.Info("ENVVAR ", val)
 		err := backend.loadDataStoreFromFile(val)
 		if err != nil {
 			log.Errorf("error loading static backend data from %s - %v", val, err)
@@ -54,8 +55,8 @@ func (f *ZtpStaticBackend) loadDataStoreFromFile(path string) error {
 	if err != nil {
 		return err
 	}
-	backendDatastore := &structs.StaticBackendDatastore{}
 	// unmarshal the data
+	backendDatastore := &structs.StaticBackendDatastore{}
 	err = json.Unmarshal(data, backendDatastore)
 	if err != nil {
 		return err
@@ -64,7 +65,7 @@ func (f *ZtpStaticBackend) loadDataStoreFromFile(path string) error {
 	// add the entries to the StaticBackend
 	for _, x := range backendDatastore.Datastore {
 		f.AddEntry(x.ClientIdentifier, x.DeviceInformation)
-		log.Debugf("adding %s to static Datastore", x.DeviceInformation.MacAddress)
+		log.Debugf("adding %s with ClientIdentifier %s to static Datastore", x.DeviceInformation.MacAddress, x.ClientIdentifier.String())
 	}
 
 	return nil

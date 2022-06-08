@@ -1,5 +1,7 @@
 package structs
 
+import targetv1 "github.com/yndd/target/apis/target/v1"
+
 type DeviceInformation struct {
 	// name of the device
 	Name string `json:"name"`
@@ -25,5 +27,6 @@ type DeviceInformation struct {
 	Option43 string `json:"option43,omitempty"`
 
 	// reference to the Model of the device
-	Model string `json:"model"`
+	Model       string              `json:"model"`
+	VendorModel targetv1.VendorType `json:"vendor"`
 }

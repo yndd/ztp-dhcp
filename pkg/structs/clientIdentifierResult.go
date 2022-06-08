@@ -10,6 +10,8 @@ import (
 // data encoded in Option 61
 type CITypeEnum int
 
+//go:generate stringer -type=CITypeEnum
+
 const (
 	String CITypeEnum = iota
 	MAC

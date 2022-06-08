@@ -122,7 +122,7 @@ func (z *ZtpServer) StartDHCPServer(serverport int, ifname string) {
 	if ifname != "" {
 		ifprintnane = ifname
 	}
-	log.Infof("Starting DHCP-Server on interface %s", ifprintnane)
+	log.Infof("starting dhcp server on interface %s", ifprintnane)
 
 	// start server
 	err = server.Serve()

@@ -1,0 +1,48 @@
+{
+	"staticBackendDatastore": [
+		{
+			"clientIdentifier": {
+				"type": 1,
+				"value": "b6:8d:0b:94:62:8d"
+			},
+			"deviceInformation": {
+				"name": "MyFunnyTestDevice",
+				"macAddress": "b6:8d:0b:94:62:8d",
+				"expectedSWVersion": "5.4.2",
+				"cidr": "192.168.50.33/24",
+				"serialNo": "666",
+				"ntpServersV4": [
+					"1.2.3.4"
+				],
+				"dnsServersV4": [
+					"8.8.8.8"
+				],
+				"option66": "http://foo.bar",
+				"option67": "my/little/file",
+				"model": "DummyDevice"
+			}
+		},
+		{
+			"clientIdentifier": {
+				"type": 0,
+				"value": "this is the identifier"
+			},
+			"deviceInformation": {
+				"name": "MyFunnyTestDevice",
+				"macAddress": "b6:8d:0b:94:62:8d",
+				"expectedSWVersion": "5.4.2",
+				"cidr": "192.168.50.33/24",
+				"serialNo": "666",
+				"ntpServersV4": [
+					"1.2.3.4"
+				],
+				"dnsServersV4": [
+					"8.8.8.8"
+				],
+				"option66": "http://foo.bar",
+				"option67": "my/little/file",
+				"model": "DummyDevice"
+			}
+		}
+	]
+}
