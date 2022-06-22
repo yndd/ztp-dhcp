@@ -6,6 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	topov1alpha1 "github.com/yndd/topology/apis/topo/v1alpha1"
+	"github.com/yndd/ztp-dhcp/pkg/dhcp/testutils"
 	"github.com/yndd/ztp-dhcp/pkg/structs"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -61,6 +62,7 @@ func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*st
 	nl := &topov1alpha1.NodeList{}
 
 	opts := runtimeclient.ListOptions{
+		// TODO: Figure how to deal with namespaces
 		Namespace: "default",
 		Limit:     50,
 	}
@@ -76,7 +78,10 @@ func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*st
 	for !found && moreResults {
 		opts.Continue = nl.Continue
 		// issue the kube-apiserver request
-		k.k8sclient.List(context.TODO(), nl, &opts)
+		err := k.k8sclient.List(context.TODO(), nl, &opts)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching information from kubernets api. error: %v", err)
+		}
 		for _, entry := range nl.Items {
 			// check if the actual entry is the one we are looking for
 			if check_func(&entry, cir.Value) {
@@ -100,8 +105,8 @@ func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*st
 		MacAddress:        result_node.Spec.Properties.MacAddress,
 		SerialNumber:      result_node.Spec.Properties.SerialNumber,
 		CIDR:              result_node.Spec.Properties.MgmtIPAddress,
-		Model:             result_node.Spec.Properties.Platform,
-		VendorModel:       result_node.Spec.Properties.VendorType,
+		Platform:          result_node.Spec.Properties.Platform,
+		VendorType:        result_node.Spec.Properties.VendorType,
 		Gateway:           "",
 		ExpectedSWVersion: result_node.Spec.Properties.ExpectedSWVersion,
 		NtpServersV4:      []string{},
@@ -114,14 +119,17 @@ func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*st
 	return result, nil
 }
 
-func getCITypeCheckFunction(citype structs.CITypeEnum) func(n *topov1alpha1.Node, serial string) bool {
+// getCITypeCheckFunction returns a function that checks the given citype
+func getCITypeCheckFunction(citype structs.CITypeEnum) func(*topov1alpha1.Node, string) bool {
 	switch citype {
 	case structs.MAC:
 		return func(n *topov1alpha1.Node, mac string) bool {
+			log.Debugf("mac check on %s ('%s' == '%s' => %s)", n.Name, n.Spec.Properties.MacAddress, mac, testutils.Bool2String(n.Spec.Properties.MacAddress == mac))
 			return n.Spec.Properties.MacAddress == mac
 		}
 	case structs.String:
 		return func(n *topov1alpha1.Node, serial string) bool {
+			log.Debugf("serial check on %s ('%s' == '%s' => %s)", n.Name, n.Spec.Properties.SerialNumber, serial, testutils.Bool2String(n.Spec.Properties.MacAddress == serial))
 			return n.Spec.Properties.SerialNumber == serial
 		}
 	}

@@ -42,6 +42,7 @@ require (
 	github.com/u-root/uio v0.0.0-20220204230159-dac05f7d2cb4 // indirect
 	github.com/yndd/app-runtime v0.0.6 // indirect
 	github.com/yndd/ndd-runtime v0.5.14 // indirect
+	github.com/yndd/ztp-webserver v0.0.0-20220608141702-7df871c7345c
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect

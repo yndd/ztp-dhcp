@@ -20,13 +20,8 @@ type DeviceInformation struct {
 	DnsServersV4 []string `json:"dnsServersV4,omitempty"`
 
 	ExpectedSWVersion string `json:"expectedSwVersion,omitempty"`
-	// how will this be referenced
-	Config   string `json:"config,omitempty"`
-	Option66 string `json:"option66,omitempty"`
-	Option67 string `json:"option67,omitempty"`
-	Option43 string `json:"option43,omitempty"`
 
-	// reference to the Model of the device
-	Model       string              `json:"model"`
-	VendorModel targetv1.VendorType `json:"vendor"`
+	// reference to the Platform of the device
+	Platform   string              `json:"plattform"`
+	VendorType targetv1.VendorType `json:"vendor"`
 }

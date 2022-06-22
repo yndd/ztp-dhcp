@@ -62,15 +62,15 @@ func (z *ZtpServer) handler(conn net.PacketConn, peer net.Addr, req *dhcpv4.DHCP
 
 	deviceInfo, err := z.backend.GetDeviceInformation(ciresult)
 	if err != nil {
-		log.Errorf("no DeviceInformation found for %s", ciresult.String())
+		log.Errorf("fetching DeviceInformation for %s; error: %v", ciresult.String(), err)
 		return
 	} else {
-		log.Infof("client identified as Name: %s, Model: %s, CIDR: %s", deviceInfo.Name, deviceInfo.Model, deviceInfo.CIDR)
+		log.Infof("client identified as Name: %s, Model: %s, CIDR: %s", deviceInfo.Name, deviceInfo.Platform, deviceInfo.CIDR)
 	}
 
-	device, err := z.deviceManager.GetModelHandler(deviceInfo.Model)
+	device, err := z.deviceManager.GetModelHandler(deviceInfo.Platform)
 	if err != nil {
-		log.Errorf("no modelhandler found for %s", deviceInfo.Model)
+		log.Errorf("no modelhandler found for %s", deviceInfo.Platform)
 		return
 	}
 
@@ -107,9 +107,9 @@ func (z *ZtpServer) handler(conn net.PacketConn, peer net.Addr, req *dhcpv4.DHCP
 
 // StartDHCPServer instantiates the socket, binds it to the given interface if ifname != "" and
 // starts the DHCP Server process on that socket.
-func (z *ZtpServer) StartDHCPServer(serverport int, ifname string) {
+func (z *ZtpServer) StartDHCPServer(serverport int, ifname, listenip string) {
 	laddr := &net.UDPAddr{
-		IP:   net.ParseIP("0.0.0.0"),
+		IP:   net.ParseIP(listenip),
 		Port: serverport,
 	}
 	// define the server
@@ -136,7 +136,7 @@ func createReply(req *dhcpv4.DHCPv4, messageType dhcpv4.MessageType, leaseTime u
 	// Create the reply from the request
 	reply, err := dhcpv4.NewReplyFromRequest(req)
 	if err != nil {
-		log.Printf("NewReplyFromRequest failed: %v", err)
+		log.Debugf("NewReplyFromRequest failed: %v", err)
 		return nil, err
 	}
 	// Change the Message Type to DHCP-ACK

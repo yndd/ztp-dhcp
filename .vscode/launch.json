@@ -13,6 +13,9 @@
             "args": ["run", "--dhcpv4-port","67", "--interface", "testbr"],
             "asRoot": true,
             "console": "integratedTerminal",
+            "env": {
+                "YNDD_ZTP_STATIC_DATASTORE_SOURCE": "staticBackendEntries.json"
+            }
         }
     ]
 }

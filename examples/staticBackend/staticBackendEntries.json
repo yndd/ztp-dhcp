@@ -3,11 +3,11 @@
 		{
 			"clientIdentifier": {
 				"type": 1,
-				"value": "b6:8d:0b:94:62:8d"
+				"value": "22:39:04:c9:79:5d"
 			},
 			"deviceInformation": {
 				"name": "MyFunnyTestDevice",
-				"macAddress": "b6:8d:0b:94:62:8d",
+				"macAddress": "22:39:04:c9:79:5d",
 				"expectedSWVersion": "5.4.2",
 				"cidr": "192.168.50.33/24",
 				"serialNo": "666",
