@@ -46,6 +46,13 @@ func NewZtpK8sBackend(kubeconfig string) *ZtpK8sBackend {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
+
+	// add core types to scheme
+	err = corev1.AddToScheme(scheme)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+
 	// create a client including the scheme
 	k8sclient, err := runtimeclient.New(config, runtimeclient.Options{
 		Scheme: scheme,

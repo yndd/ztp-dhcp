@@ -19,6 +19,7 @@ type DeviceManagerRegistrator interface {
 // DeviceManagerHandler the DeviceManager Interface for the handler side of things
 type DeviceManagerHandler interface {
 	GetModelHandler(model string) (Device, error)
+	SetBackend(backend.DhcpBackend)
 }
 
 // DeviceManagerImpl the actual implementation of the DeviceManager
@@ -55,6 +56,7 @@ func (dm *DeviceManagerImpl) RegisterDevice(managed_models []string, device Devi
 		log.Infof("Adding %s to Devicemanager", entry)
 		// register model to the given Device implementation
 		dm.devices[entry] = device
+		device.SetBackend(dm.backend)
 	}
 	return nil
 }
@@ -69,4 +71,8 @@ func (dm *DeviceManagerImpl) GetModelHandler(model string) (Device, error) {
 
 func (dm *DeviceManagerImpl) SetBackend(backend backend.DhcpBackend) {
 	dm.backend = backend
+	for _, device := range dm.devices {
+		// updating backend reference for all devices
+		device.SetBackend(dm.backend)
+	}
 }

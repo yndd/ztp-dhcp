@@ -27,9 +27,12 @@ type ZtpSettings struct {
 
 // NewZtpServer konstructor for a new ZtpServer instance
 func NewZtpServer(backend backend.DhcpBackend, ztpSettings *ZtpSettings) *ZtpServer {
+	dm := devices.GetDeviceManagerHandler()
+	dm.SetBackend(backend)
+
 	return &ZtpServer{
 		backend:       backend,
-		deviceManager: devices.GetDeviceManagerHandler(),
+		deviceManager: dm,
 		settings:      ztpSettings,
 	}
 }

@@ -17,7 +17,8 @@ var (
 	ifname    string // specific interface to start dhcp server on
 	leaseTime uint32
 	// ip address the dhcp server is bound to
-	listenip string
+	listenip   string
+	kubeconfig string
 )
 
 // runCmd represents the run command
@@ -30,7 +31,7 @@ var runCmd = &cobra.Command{
 		//backend := k8s.NewZtpK8sBackend()
 
 		// prepare the static Backend
-		backend := k8s.NewZtpK8sBackend("")
+		backend := k8s.NewZtpK8sBackend(kubeconfig)
 
 		// setup the server
 		ztpserver := dhcp.NewZtpServer(backend, &dhcp.ZtpSettings{LeaseTime: leaseTime})
@@ -53,4 +54,5 @@ func init() {
 	runCmd.Flags().StringVar(&ifname, "interface", "", "Define the interface to bind the DHCP server to. If left empty [default] the server is not bound to a specific interface.")
 	runCmd.Flags().StringVar(&listenip, "listen-ip", "0.0.0.0", "IP-Address the DHCP server is bound to")
 	runCmd.Flags().Uint32Var(&leaseTime, "lease-time", 3600, "The lease time in seconds.")
+	runCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "Pointer to the kubeconfig file")
 }
