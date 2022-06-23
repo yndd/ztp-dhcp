@@ -6,5 +6,6 @@ type StaticBackendDatastoreEntry struct {
 }
 
 type StaticBackendDatastore struct {
-	Datastore []*StaticBackendDatastoreEntry `json:"staticBackendDatastore"`
+	Datastore     []*StaticBackendDatastoreEntry `json:"staticBackendDatastore"`
+	WebserverInfo *WebserverInfo                 `json:"webserver"`
 }

@@ -16,9 +16,9 @@ type NokiaSros struct {
 
 func (sros *NokiaSros) AdjustReply(req *dhcpv4.DHCPv4, reply *dhcpv4.DHCPv4, devinfo *structs.DeviceInformation) {
 	// set Option66
-	reply.Options.Update(dhcpv4.OptTFTPServerName(devinfo.Option66))
+	//reply.Options.Update(dhcpv4.OptTFTPServerName(devinfo.Option66))
 	// set Option67
-	reply.Options.Update(dhcpv4.OptBootFileName(devinfo.Option67))
+	//reply.Options.Update(dhcpv4.OptBootFileName(devinfo.Option67))
 }
 
 func (sros *NokiaSros) SetBackend(backend backend.DhcpBackend) {

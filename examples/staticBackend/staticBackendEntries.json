@@ -1,4 +1,9 @@
 {
+	"webserver": {
+		"ipFqdn": "192.168.0.66",
+		"protocol": "192.168.0.66",
+		"port": 80
+	},
 	"staticBackendDatastore": [
 		{
 			"clientIdentifier": {

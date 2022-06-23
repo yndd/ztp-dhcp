@@ -11,7 +11,8 @@ import (
 )
 
 type ZtpStaticBackend struct {
-	datastore map[string]*structs.DeviceInformation
+	datastore            map[string]*structs.DeviceInformation
+	webserverInformation *structs.WebserverInfo
 }
 
 func NewZtpStaticBackend() *ZtpStaticBackend {
@@ -42,6 +43,10 @@ func (f *ZtpStaticBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (
 
 func (f *ZtpStaticBackend) AddEntry(cir *structs.ClientIdentifier, di *structs.DeviceInformation) {
 	f.datastore[cir.Value] = di
+}
+
+func (f *ZtpStaticBackend) GetWebserverInformation() (*structs.WebserverInfo, error) {
+	return f.webserverInformation, nil
 }
 
 func (f *ZtpStaticBackend) loadDataStoreFromFile(path string) error {

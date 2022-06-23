@@ -8,6 +8,8 @@ import (
 	topov1alpha1 "github.com/yndd/topology/apis/topo/v1alpha1"
 	"github.com/yndd/ztp-dhcp/pkg/dhcp/testutils"
 	"github.com/yndd/ztp-dhcp/pkg/structs"
+	"github.com/yndd/ztp-dhcp/pkg/utils"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -58,14 +60,65 @@ func NewZtpK8sBackend(kubeconfig string) *ZtpK8sBackend {
 	}
 }
 
+func (k *ZtpK8sBackend) GetWebserverInformation() (*structs.WebserverInfo, error) {
+	serviceName := "ztp-webserver-yndd"
+	protocolLookupLabel := "ztp.webserver.protocol"
+	// figure out which namespace we are runnning in
+	namespace := utils.DeduceNamespace("ndd-system")
+
+	s := &corev1.Service{}
+	err := k.k8sclient.Get(context.TODO(), runtimeclient.ObjectKey{
+		Namespace: namespace,
+		Name:      serviceName,
+	}, s)
+
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving ztp-webserver service information from k8s api: %v", err)
+	}
+
+	wsi := &structs.WebserverInfo{}
+
+	switch s.Spec.Type {
+	case corev1.ServiceTypeLoadBalancer:
+		if s.Status.LoadBalancer.Ingress[0].Hostname != "" {
+			wsi.IpFqdn = s.Status.LoadBalancer.Ingress[0].Hostname
+		} else if s.Status.LoadBalancer.Ingress[0].IP != "" {
+			wsi.IpFqdn = s.Status.LoadBalancer.Ingress[0].IP
+		}
+	case corev1.ServiceTypeExternalName:
+		wsi.IpFqdn = s.Spec.ExternalName
+	case corev1.ServiceTypeClusterIP:
+		if len(s.Spec.ExternalIPs) > 0 {
+			wsi.IpFqdn = s.Spec.ExternalIPs[0]
+		}
+	}
+	// check if we found any endpoint information
+	if wsi.IpFqdn == "" {
+		return nil, fmt.Errorf("unable to determine external ClusterIP, ExternalName or ExternalIP for service '%s' in namespace '%s'", serviceName, namespace)
+	}
+
+	wsi.Port = s.Spec.Ports[0].Port
+
+	if val, exists := s.ObjectMeta.Labels[protocolLookupLabel]; exists {
+		wsi.Protocol = val
+	} else {
+		return nil, fmt.Errorf("unable to determine protocol of service '%s', missing label '%s'", serviceName, protocolLookupLabel)
+	}
+
+	return wsi, nil
+}
+
 func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error) {
-	nl := &topov1alpha1.NodeList{}
+	// figure out the namespace we are running in atm.
+	// if "POD_NAMESPACE" is not set fall back to "ndd-system" as namespace
+	namespace := utils.DeduceNamespace("ndd-system")
 
 	opts := runtimeclient.ListOptions{
-		// TODO: Figure how to deal with namespaces
-		Namespace: "default",
+		Namespace: namespace,
 		Limit:     50,
 	}
+
+	nl := &topov1alpha1.NodeList{}
 
 	var found = false
 	var moreResults = true
@@ -111,10 +164,6 @@ func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*st
 		ExpectedSWVersion: result_node.Spec.Properties.ExpectedSWVersion,
 		NtpServersV4:      []string{},
 		DnsServersV4:      []string{},
-		Config:            "",
-		Option66:          "",
-		Option67:          "",
-		Option43:          "",
 	}
 	return result, nil
 }

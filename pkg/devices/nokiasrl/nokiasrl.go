@@ -18,10 +18,10 @@ type NokiaSrl struct {
 
 func (srl *NokiaSrl) AdjustReply(req *dhcpv4.DHCPv4, reply *dhcpv4.DHCPv4, devinfo *structs.DeviceInformation) {
 	// set Option66
-	reply.Options.Update(dhcpv4.OptTFTPServerName(devinfo.Option66))
+	//reply.Options.Update(dhcpv4.OptTFTPServerName(devinfo.Option66))
 	// set Option67
 
-	reply.Options.Update(dhcpv4.OptBootFileName(websstructs.NewUrlParams(string(devinfo.VendorType), devinfo.Platform, websstructs.Script).GetUrlRelative()))
+	reply.Options.Update(dhcpv4.OptBootFileName(websstructs.NewUrlParams(string(devinfo.VendorType), devinfo.Platform, devinfo.Name, websstructs.Script).GetUrlRelative()))
 }
 
 func (srl *NokiaSrl) SetBackend(backend backend.DhcpBackend) {
