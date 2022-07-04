@@ -20,6 +20,8 @@ type ZtpK8sBackend struct {
 	k8sclient runtimeclient.Client
 }
 
+type NodeMatcher func(*topov1alpha1.Node) bool
+
 // NewZtpK8sBackend returns a new Kubernetes based backend instance
 func NewZtpK8sBackend(kubeconfig string) *ZtpK8sBackend {
 	log.Infof("Instantiating K8sBackend")
@@ -67,14 +69,14 @@ func NewZtpK8sBackend(kubeconfig string) *ZtpK8sBackend {
 	}
 }
 
-func (k *ZtpK8sBackend) GetWebserverInformation() (*structs.WebserverInfo, error) {
+func GetWebserverInformation(rc runtimeclient.Client) (*structs.WebserverInfo, error) {
 	serviceName := "ztp-webserver-yndd"
 	protocolLookupLabel := "ztp.webserver.protocol"
 	// figure out which namespace we are runnning in
 	namespace := utils.DeduceNamespace("ndd-system")
 
 	s := &corev1.Service{}
-	err := k.k8sclient.Get(context.TODO(), runtimeclient.ObjectKey{
+	err := rc.Get(context.TODO(), runtimeclient.ObjectKey{
 		Namespace: namespace,
 		Name:      serviceName,
 	}, s)
@@ -115,7 +117,11 @@ func (k *ZtpK8sBackend) GetWebserverInformation() (*structs.WebserverInfo, error
 	return wsi, nil
 }
 
-func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error) {
+func (k *ZtpK8sBackend) GetWebserverInformation() (*structs.WebserverInfo, error) {
+	return GetWebserverInformation(k.k8sclient)
+}
+
+func (k *ZtpK8sBackend) retrieveTopoNode(checkFunc NodeMatcher, notFoundErrorText string) (*structs.DeviceInformation, error) {
 	// figure out the namespace we are running in atm.
 	// if "POD_NAMESPACE" is not set fall back to "ndd-system" as namespace
 	namespace := utils.DeduceNamespace("ndd-system")
@@ -131,9 +137,6 @@ func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*st
 	var moreResults = true
 	var result_node *topov1alpha1.Node = nil
 
-	// get a pointer to the function that checks the specific CIType
-	check_func := getCITypeCheckFunction(cir.CIType)
-
 	// if not found and more results are available, continue to search
 	for !found && moreResults {
 		opts.Continue = nl.Continue
@@ -144,7 +147,7 @@ func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*st
 		}
 		for _, entry := range nl.Items {
 			// check if the actual entry is the one we are looking for
-			if check_func(&entry, cir.Value) {
+			if checkFunc(&entry) {
 				result_node = &entry
 				found = true
 				break
@@ -156,7 +159,7 @@ func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*st
 
 	// stop if the node could not be found
 	if result_node == nil {
-		return nil, fmt.Errorf("node with identifier %s, %s not found", cir.CIType.String(), cir.Value)
+		return nil, fmt.Errorf(notFoundErrorText)
 	}
 
 	// populate the result object
@@ -175,16 +178,36 @@ func (k *ZtpK8sBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*st
 	return result, nil
 }
 
+func (k *ZtpK8sBackend) GetDeviceInformationByClientIdentifier(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error) {
+	// prepare the error text used when the node cannot be found
+	notFoundErrorText := fmt.Sprintf("topology node with identifier %s, %s not found", cir.CIType.String(), cir.Value)
+	// retrieve the checkFunction, this might be a function that checks for the Serialnumber or the MAC address field
+	checkFunk := getCITypeCheckFunction(cir)
+	// try to retrieve the node and return the result
+	return k.retrieveTopoNode(checkFunk, notFoundErrorText)
+}
+
+func (k *ZtpK8sBackend) GetDeviceInformationByName(deviceId string) (*structs.DeviceInformation, error) {
+	// create a checkFunc that compares the given deviceId with the Topology Node name
+	checkFunc := func(n *topov1alpha1.Node) bool { return n.Name == deviceId }
+	// prepare the error text used when the node cannot be found
+	notFoundErrorText := fmt.Sprintf("topology node with name '%s' not found", deviceId)
+	// try to retrieve the node and return the result
+	return k.retrieveTopoNode(checkFunc, notFoundErrorText)
+}
+
 // getCITypeCheckFunction returns a function that checks the given citype
-func getCITypeCheckFunction(citype structs.CITypeEnum) func(*topov1alpha1.Node, string) bool {
-	switch citype {
+func getCITypeCheckFunction(cir *structs.ClientIdentifier) func(*topov1alpha1.Node) bool {
+	switch cir.CIType {
 	case structs.MAC:
-		return func(n *topov1alpha1.Node, mac string) bool {
+		return func(n *topov1alpha1.Node) bool {
+			mac := cir.Value
 			log.Debugf("mac check on %s ('%s' == '%s' => %s)", n.Name, n.Spec.Properties.MacAddress, mac, testutils.Bool2String(n.Spec.Properties.MacAddress == mac))
 			return n.Spec.Properties.MacAddress == mac
 		}
 	case structs.String:
-		return func(n *topov1alpha1.Node, serial string) bool {
+		return func(n *topov1alpha1.Node) bool {
+			serial := cir.Value
 			log.Debugf("serial check on %s ('%s' == '%s' => %s)", n.Name, n.Spec.Properties.SerialNumber, serial, testutils.Bool2String(n.Spec.Properties.MacAddress == serial))
 			return n.Spec.Properties.SerialNumber == serial
 		}

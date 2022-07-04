@@ -11,9 +11,10 @@ import (
 var managed_models = []string{"NokiaSROS"}
 
 type NokiaSros struct {
-	backend backend.DhcpBackend
+	backend backend.ZtpBackend
 }
 
+// AdjustReply takes the general reply and adjusts the device specific values
 func (sros *NokiaSros) AdjustReply(req *dhcpv4.DHCPv4, reply *dhcpv4.DHCPv4, devinfo *structs.DeviceInformation) {
 	// set Option66
 	//reply.Options.Update(dhcpv4.OptTFTPServerName(devinfo.Option66))
@@ -21,7 +22,8 @@ func (sros *NokiaSros) AdjustReply(req *dhcpv4.DHCPv4, reply *dhcpv4.DHCPv4, dev
 	//reply.Options.Update(dhcpv4.OptBootFileName(devinfo.Option67))
 }
 
-func (sros *NokiaSros) SetBackend(backend backend.DhcpBackend) {
+// SetBackend used for late binding of the backend
+func (sros *NokiaSros) SetBackend(backend backend.ZtpBackend) {
 	sros.backend = backend
 }
 

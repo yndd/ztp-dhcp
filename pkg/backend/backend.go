@@ -6,9 +6,10 @@ import (
 	"github.com/yndd/ztp-dhcp/pkg/structs"
 )
 
-type DhcpBackend interface {
-	// GetDeviceInformation
-	GetDeviceInformation(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error)
+type ZtpBackend interface {
+	// GetDeviceInformationByClientIdentifier
+	GetDeviceInformationByClientIdentifier(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error)
+	GetDeviceInformationByName(deviceId string) (*structs.DeviceInformation, error)
 	// GetWebserverInformation is used to query the backend for information about
 	// the webserver that further ztp requests should be forwarded to
 	GetWebserverInformation() (*structs.WebserverInfo, error)

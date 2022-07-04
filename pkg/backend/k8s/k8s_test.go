@@ -14,5 +14,5 @@ func TestK8s(t *testing.T) {
 		t.Error("Unable to obtain home directory")
 	}
 	zb := NewZtpK8sBackend(filepath.Join(home, ".kube", "config"))
-	zb.GetDeviceInformation(&structs.ClientIdentifier{CIType: structs.MAC, Value: "b6:8d:0b:94:62:8d"})
+	zb.GetDeviceInformationByClientIdentifier(&structs.ClientIdentifier{CIType: structs.MAC, Value: "b6:8d:0b:94:62:8d"})
 }

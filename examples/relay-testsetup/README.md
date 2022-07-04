@@ -32,15 +32,15 @@ ip l set dev hif up
 ip r add 192.168.50.0/24 via 192.168.51.10
 
 # add route to dhcp ip in relay namespace
-ip netns exec relay ip r add 192.168.168.1/32 via 192.168.51.1
+ip netns exec relay ip r add default via 192.168.51.1
 
 # execute the dhcp relay agent in the relay namespace
 # (needs to listen on uplink as well as downlink interface)
-ip netns exec relay dhcrelay -a -d -i rifc -i rifh 192.168.168.1
+ip netns exec relay dhcrelay -a -d -i rifc -i rifh 172.24.100.101
 
 # MANUAL STEP HERE:
 ## start the ztp-dhcp on the host in the root namespace
 
 # start the dhcpclient in the client namespace
-ip netns exec client dhclient -i cif
+ip netns exec client dhclient -d -lf /dev/null -i cif
 ```

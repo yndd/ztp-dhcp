@@ -2,6 +2,7 @@ package static
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -33,12 +34,21 @@ func NewZtpStaticBackend() *ZtpStaticBackend {
 	return backend
 }
 
-func (f *ZtpStaticBackend) GetDeviceInformation(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error) {
+func (f *ZtpStaticBackend) GetDeviceInformationByClientIdentifier(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error) {
 	val, exists := f.datastore[cir.Value]
 	if !exists {
 		return nil, backend.ErrDeviceNotFound
 	}
 	return val, nil
+}
+
+func (f *ZtpStaticBackend) GetDeviceInformationByName(name string) (*structs.DeviceInformation, error) {
+	for _, x := range f.datastore {
+		if x.Name == name {
+			return x, nil
+		}
+	}
+	return nil, fmt.Errorf("no entry with name '%s' found", name)
 }
 
 func (f *ZtpStaticBackend) AddEntry(cir *structs.ClientIdentifier, di *structs.DeviceInformation) {

@@ -15,7 +15,7 @@ import (
 
 // ZtpServer is the ZTP Server
 type ZtpServer struct {
-	backend       backend.DhcpBackend
+	backend       backend.ZtpBackend
 	deviceManager devices.DeviceManagerHandler
 	settings      *ZtpSettings
 }
@@ -26,7 +26,7 @@ type ZtpSettings struct {
 }
 
 // NewZtpServer konstructor for a new ZtpServer instance
-func NewZtpServer(backend backend.DhcpBackend, ztpSettings *ZtpSettings) *ZtpServer {
+func NewZtpServer(backend backend.ZtpBackend, ztpSettings *ZtpSettings) *ZtpServer {
 	dm := devices.GetDeviceManagerHandler()
 	dm.SetBackend(backend)
 
@@ -63,7 +63,7 @@ func (z *ZtpServer) handler(conn net.PacketConn, peer net.Addr, req *dhcpv4.DHCP
 		return
 	}
 
-	deviceInfo, err := z.backend.GetDeviceInformation(ciresult)
+	deviceInfo, err := z.backend.GetDeviceInformationByClientIdentifier(ciresult)
 	if err != nil {
 		log.Errorf("fetching DeviceInformation for %s; error: %v", ciresult.String(), err)
 		return

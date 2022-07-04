@@ -11,7 +11,7 @@ import (
 var managed_models = []string{"DummyDevice"}
 
 type DummyDevice struct {
-	backend backend.DhcpBackend
+	backend backend.ZtpBackend
 }
 
 func (dd *DummyDevice) AdjustReply(req *dhcpv4.DHCPv4, reply *dhcpv4.DHCPv4, devinfo *structs.DeviceInformation) {
@@ -21,7 +21,7 @@ func (dd *DummyDevice) AdjustReply(req *dhcpv4.DHCPv4, reply *dhcpv4.DHCPv4, dev
 	//reply.Options.Update(dhcpv4.OptBootFileName(devinfo.Option67))
 }
 
-func (dd *DummyDevice) SetBackend(backend backend.DhcpBackend) {
+func (dd *DummyDevice) SetBackend(backend backend.ZtpBackend) {
 	dd.backend = backend
 }
 
