@@ -36,11 +36,12 @@ ip netns exec relay ip r add default via 192.168.51.1
 
 # execute the dhcp relay agent in the relay namespace
 # (needs to listen on uplink as well as downlink interface)
-ip netns exec relay dhcrelay -a -d -i rifc -i rifh 172.24.100.101
+ip netns exec relay dhcrelay -a -d -i rifc -i rifh 192.168.87.1
 
 # MANUAL STEP HERE:
 ## start the ztp-dhcp on the host in the root namespace
 
-# start the dhcpclient in the client namespace
-ip netns exec client dhclient -d -lf /dev/null -i cif
+# start the dhcpclient in the client namespace  
+### Add '-I "THIS is the identifier"' to add a custom string identifier
+ip netns exec client dhclient -d -lf /dev/null -i cif 
 ```
