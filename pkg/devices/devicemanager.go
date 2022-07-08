@@ -11,31 +11,26 @@ import (
 // Devicemanager is a singleton
 var deviceManager *DeviceManagerImpl
 
-// DeviceManagerRegistrator the DeviceManager Interface for registering device model handlers
-type DeviceManagerRegistrator interface {
-	RegisterDevice([]string, Device) error
-}
-
-// DeviceManagerHandler the DeviceManager Interface for the handler side of things
-type DeviceManagerHandler interface {
-	GetModelHandler(model string) (Device, error)
-	SetBackend(backend.ZtpBackend)
-}
-
 // DeviceManagerImpl the actual implementation of the DeviceManager
 type DeviceManagerImpl struct {
 	devices map[string]Device
 	backend backend.ZtpBackend
 }
 
+// GetDeviceManagerHandler retrieve a reference to
+// the GetDeviceManagerHandler interface of this DeviceManagerImpl
 func GetDeviceManagerHandler() DeviceManagerHandler {
 	return newDeviceManager()
 }
 
+// GetDeviceManagerRegistrator retrieve a reference to
+// the DeviceManagerRegistrator interface of this DeviceManagerImpl
 func GetDeviceManagerRegistrator() DeviceManagerRegistrator {
 	return newDeviceManager()
 }
 
+// newDeviceManager returns the singleton instance of the DeviceManager if
+// uninitialized, it will construct the instance
 func newDeviceManager() *DeviceManagerImpl {
 	if deviceManager == nil {
 		deviceManager = &DeviceManagerImpl{
@@ -61,6 +56,7 @@ func (dm *DeviceManagerImpl) RegisterDevice(managed_models []string, device Devi
 	return nil
 }
 
+// GetModelHandler retrieves the ModelHandler referenced by its name
 func (dm *DeviceManagerImpl) GetModelHandler(model string) (Device, error) {
 	deviceHandler, exists := dm.devices[model]
 	if !exists {
@@ -69,6 +65,7 @@ func (dm *DeviceManagerImpl) GetModelHandler(model string) (Device, error) {
 	return deviceHandler, nil
 }
 
+// SetBackend pushes the given ZtpBackend instance into all of the device instances
 func (dm *DeviceManagerImpl) SetBackend(backend backend.ZtpBackend) {
 	dm.backend = backend
 	for _, device := range dm.devices {
