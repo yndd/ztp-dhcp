@@ -22,7 +22,7 @@ help: ## Display this help.
 
 
 docker-build: update-yndd-dependencies ## Build docker image with the manager.
-	docker build -t $(IMAGE_TAG_BASE) .
+	DOCKER_BUILDKIT=1 docker build -t $(IMAGE_TAG_BASE) .
 
 docker-push: docker-build ## Push docker image with the manager.
 	docker push $(IMAGE_TAG_BASE)

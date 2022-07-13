@@ -3,19 +3,20 @@ module github.com/yndd/ztp-dhcp
 go 1.17
 
 require (
+	github.com/golang/mock v1.6.0
 	github.com/insomniacslk/dhcp v0.0.0-20220504074936-1ca156eafb9f
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.5.0
 	github.com/yndd/target v0.0.100
 	github.com/yndd/topology v0.0.7
-	github.com/yndd/ztp-webserver v0.0.0-20220707072021-69882090a099
+	github.com/yndd/ztp-webserver v0.0.0-20220708150254-1fd1615ed678
 	k8s.io/api v0.24.2
 	k8s.io/apimachinery v0.24.2
 	k8s.io/client-go v0.24.2
 	sigs.k8s.io/controller-runtime v0.12.3
 )
 
-
+//replace github.com/yndd/ztp-webserver => ../ztp-webserver
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -45,9 +46,9 @@ require (
 	github.com/u-root/uio v0.0.0-20220204230159-dac05f7d2cb4 // indirect
 	github.com/yndd/app-runtime v0.0.32 // indirect
 	github.com/yndd/ndd-runtime v0.5.19 // indirect
-	golang.org/x/net v0.0.0-20220706163947-c90051bbdb60 // indirect
+	golang.org/x/net v0.0.0-20220708220712-1185a9018129 // indirect
 	golang.org/x/oauth2 v0.0.0-20220630143837-2104d58473e0 // indirect
-	golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e // indirect
+	golang.org/x/sys v0.0.0-20220712014510-0a85c31ab51e // indirect
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect

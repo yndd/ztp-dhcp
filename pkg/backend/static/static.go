@@ -16,6 +16,9 @@ type ZtpStaticBackend struct {
 	webserverInformation *structs.WebserverInfo
 }
 
+// NewZtpStaticBackend constructs a new StaticZTPBackend.
+// The initial content is taken from the file referenced under the
+// 'YNDD_ZTP_STATIC_DATASTORE_SOURCE' environemtn variable
 func NewZtpStaticBackend() *ZtpStaticBackend {
 	log.Infof("Instantiating ZtpStaticBackend")
 	backend := &ZtpStaticBackend{

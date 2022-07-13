@@ -42,15 +42,7 @@ var runCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(runCmd)
-
-	// TODO: allow for viper environment variables here
-	// viper.SetEnvPrefix("NDD")
-	// viper.BindEnv("dhcpv4_port")
-
-	// viper.BindPFlag("dhcpv4_port", runCmd.Flags().Lookup("dhcpv4-port"))
-
 	runCmd.Flags().IntVar(&dhcpv4_port, "dhcpv4-port", 67, "The port to bind the dhcpv4 server to.")
-	//runCmd.Flags().IntVar(&dhcpv6_port, "dhcpv6-port", 567, "The port to bind the dhcpv6 server to.")
 	runCmd.Flags().StringVar(&ifname, "interface", "", "Define the interface to bind the DHCP server to. If left empty [default] the server is not bound to a specific interface.")
 	runCmd.Flags().StringVar(&listenip, "listen-ip", "0.0.0.0", "IP-Address the DHCP server is bound to")
 	runCmd.Flags().Uint32Var(&leaseTime, "lease-time", 3600, "The lease time in seconds.")
