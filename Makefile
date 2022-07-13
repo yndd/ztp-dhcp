@@ -58,11 +58,14 @@ update-yndd-dependencies:
 
 MOCKDIR = pkg/mocks
 
-.PHONY: gen-mocks
-gen-mocks: ## Generate mocks for all the defined interfaces.
+.PHONY: mocks-gen
+mocks-gen: mocks-rm ## Generate mocks for all the defined interfaces.
 	go install github.com/golang/mock/mockgen@latest
-	rm -rf pkg/mocks/*
 	mockgen -package=mock -source=pkg/devices/device.go -destination=$(MOCKDIR)/device.go
 	mockgen -package=mock -source=pkg/backend/backend.go -destination=$(MOCKDIR)/backend.go
 	mockgen -package=mock -source=pkg/devices/devicemanagerhandler.go -destination=$(MOCKDIR)/devicemanagerhandler.go
 	mockgen -package=mock -source=pkg/devices/devicemanagerregistrator.go -destination=$(MOCKDIR)/devicemanagerregistrator.go
+
+.PHONY: mocks-rm
+mocks-rm: ## remove generated mocks
+	rm -rf $(MOCKDIR)/*
