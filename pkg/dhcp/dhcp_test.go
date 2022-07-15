@@ -7,6 +7,7 @@ import (
 
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"github.com/yndd/ztp-dhcp/pkg/backend/static"
+	_ "github.com/yndd/ztp-dhcp/pkg/devices/all"
 	"github.com/yndd/ztp-dhcp/pkg/dhcp/testutils"
 	"github.com/yndd/ztp-dhcp/pkg/structs"
 )
@@ -24,6 +25,7 @@ func TestDhcp(t *testing.T) {
 		&structs.DeviceInformation{
 			Name:              "MyFunnyTestDevice",
 			MacAddress:        "b6:8d:0b:94:62:8d",
+			Platform:          "Dummy",
 			ExpectedSWVersion: "5.4.2",
 			CIDR:              "192.168.50.33/24",
 			SerialNumber:      "666",
@@ -40,8 +42,25 @@ func TestDhcp(t *testing.T) {
 			Name:              "MyFunnyTestDevice",
 			MacAddress:        "b6:8d:0b:94:62:8d",
 			ExpectedSWVersion: "5.4.2",
+			Platform:          "Dummy",
 			CIDR:              "192.168.50.33/24",
 			SerialNumber:      "666",
+			NtpServersV4:      []string{"1.2.3.4"},
+			DnsServersV4:      []string{"8.8.8.8"},
+		},
+	)
+	staticBackend.AddEntry(
+		&structs.ClientIdentifier{
+			CIType: 0,
+			Value:  "NS2113T0295",
+		},
+		&structs.DeviceInformation{
+			Name:              "IXR",
+			MacAddress:        "b6:8d:0b:94:62:aa",
+			ExpectedSWVersion: "5.4.2",
+			Platform:          "SRLinux",
+			CIDR:              "192.168.50.33/24",
+			SerialNumber:      "NS2113T0295",
 			NtpServersV4:      []string{"1.2.3.4"},
 			DnsServersV4:      []string{"8.8.8.8"},
 		},
@@ -56,13 +75,16 @@ func TestDhcp(t *testing.T) {
 		// decode the Base64 encoded packet
 		foo, err := base64.StdEncoding.DecodeString(entry.B64data)
 		if err != nil {
-			t.Error(err)
+			t.Error()
+			t.Fail()
 		}
 		// Parse the packet to become a dhcpv4 library struct
 		paket, err := dhcpv4.FromBytes(foo)
 		if err != nil {
 			t.Error(err)
+			t.Fail()
 		}
+
 		// instantiate a Fake PacketConn, required as a parameter to the handler function
 		packetConn := testutils.NewFakePacketConn()
 		// finally call the handler to process the packet
@@ -70,6 +92,7 @@ func TestDhcp(t *testing.T) {
 		// perform checks on the packetConn
 		if packetConn.WriteToCalled != entry.SucceedWriteTo {
 			t.Errorf("WriteTo call expected = %s, was %s", testutils.Bool2String(entry.SucceedWriteTo), testutils.Bool2String(packetConn.WriteToCalled))
+			t.Fail()
 		}
 	}
 }
@@ -102,7 +125,7 @@ var testData = []*testDataEntry{
 		  DHCP Message Type: DISCOVER
 		  Parameter Request List: Subnet Mask, Time Offset, Router, Domain Name Server, Host Name, Domain Name, Interface MTU, Broadcast Address, NTP Servers, NetBIOS over TCP/IP Name Server, NetBIOS over TCP/IP Scope, DNS Domain Search List, Classless Static Route
 		  Client identifier: [116 104 105 115 32 105 115 32 116 104 101 32 105 100 101 110 116 105 102 105 101 114]`,
-		B64data:        "AQEGAHQxoyQAAAAAAAAAAAAAAAAAAAAAAAAAALaNC5RijQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABjglNjDAR2Ym94NQEBNw0BHAIDDwZ3DCwvGnkqPRZ0aGlzIGlzIHRoZSBpZGVudGlmaWVy/wAAAAAAAAAAAAAA",
+		B64data:        "AQEGAHQxoyQAAAAAAAAAAAAAAAAAAAAAAAAAALaNC5RijQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABjglNjDAR2Ym94NQEBNw0BHAIDDwZ3DCwvGnkqPRcAdGhpcyBpcyB0aGUgaWRlbnRpZmllcv8AAAAAAAAAAAAA",
 		SucceedWriteTo: true,
 		Option61Type:   structs.String,
 	},
@@ -128,7 +151,7 @@ var testData = []*testDataEntry{
 		  Parameter Request List: Subnet Mask, Time Offset, Router, Domain Name Server, Host Name, Domain Name, Interface MTU, Broadcast Address, NTP Servers, NetBIOS over TCP/IP Name Server, NetBIOS over TCP/IP Scope, DNS Domain Search List, Classless Static Route
 		  Client identifier: [116 104 105 115 32 105 115 32 116 104 101 32 105 100 101 110 116 105 102 105 101 114]
 		`,
-		B64data:        "AQEGAHQxoyQAAAAAAAAAAAAAAAAAAAAAAAAAALaNC5RijQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABjglNjDAR2Ym94MgTAqDIhNQEDNw0BHAIDDwZ3DCwvGnkqPRZ0aGlzIGlzIHRoZSBpZGVudGlmaWVy/wAAAAAA",
+		B64data:        "AQEGAHQxoyQAAAAAAAAAAAAAAAAAAAAAAAAAALaNC5RijQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABjglNjDAR2Ym94MgTAqDIhNQEDNw0BHAIDDwZ3DCwvGnkqPRcAdGhpcyBpcyB0aGUgaWRlbnRpZmllcv8AAAAA",
 		SucceedWriteTo: true,
 		Option61Type:   structs.String,
 	},
@@ -182,5 +205,13 @@ var testData = []*testDataEntry{
 		B64data:        "AQEGAIRh9B0AAAAAAAAAAAAAAAAAAAAAAAAAALaNC5RijQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABjglNjDAR2Ym94NQEBNw0BHAIDDwZ3DCwvGnkqPQcBto0LlGKN/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 		SucceedWriteTo: true,
 		Option61Type:   structs.MAC,
+	},
+	{
+		Description: `
+		SRLINUX Discovery via relay agent
+		`,
+		SucceedWriteTo: true,
+		Option61Type:   structs.String,
+		B64data:        "AQEGAYxe73AADoAAAAAAAAAAAAAAAAAAwKgWAVDg75lgUQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABjglNjMwT/////NQEBNwsBAwYHDA8qK0JDdzwRTk9LSUE6NzIyMCBJWFItRDE9DABOUzIxMTNUMDI5NVIIAQZlbnA2czD/",
 	},
 }

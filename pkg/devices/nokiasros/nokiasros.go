@@ -8,7 +8,7 @@ import (
 	"github.com/yndd/ztp-dhcp/pkg/structs"
 )
 
-var managed_models = []string{"NokiaSROS"}
+var managed_models = []string{"SROS"}
 
 type NokiaSros struct {
 	backend backend.ZtpBackend

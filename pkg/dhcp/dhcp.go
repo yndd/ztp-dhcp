@@ -77,18 +77,23 @@ func (z *ZtpServer) handler(conn net.PacketConn, peer net.Addr, req *dhcpv4.DHCP
 		return
 	}
 
+	dsinfo, err := z.backend.GetDhcpserverInformation()
+	if err != nil {
+		log.Error(err)
+	}
+
 	// figure out if DHCP Offer (handleDiscover) or
 	// DHCP Ack (handleRequest) is to be send
 	switch req.MessageType() {
 	case dhcpv4.MessageTypeDiscover:
 		log.Infof("Create DHCP Offer for %s", req.ClientHWAddr)
-		reply, err = createReply(req, dhcpv4.MessageTypeOffer, z.settings.LeaseTime, deviceInfo)
+		reply, err = createReply(req, dhcpv4.MessageTypeOffer, z.settings.LeaseTime, deviceInfo, dsinfo.Ip)
 		if err != nil {
 			log.Error(err)
 		}
 	case dhcpv4.MessageTypeRequest:
 		log.Infof("create DHCP Ack for %s", req.ClientHWAddr)
-		reply, err = createReply(req, dhcpv4.MessageTypeAck, z.settings.LeaseTime, deviceInfo)
+		reply, err = createReply(req, dhcpv4.MessageTypeAck, z.settings.LeaseTime, deviceInfo, dsinfo.Ip)
 		if err != nil {
 			log.Error(err)
 		}
@@ -135,7 +140,7 @@ func (z *ZtpServer) StartDHCPServer(serverport int, ifname, listenip string) {
 }
 
 // createReply create a DHCP Reply from a Request.
-func createReply(req *dhcpv4.DHCPv4, messageType dhcpv4.MessageType, leaseTime uint32, deviceInfo *structs.DeviceInformation) (*dhcpv4.DHCPv4, error) {
+func createReply(req *dhcpv4.DHCPv4, messageType dhcpv4.MessageType, leaseTime uint32, deviceInfo *structs.DeviceInformation, serverIP net.IP) (*dhcpv4.DHCPv4, error) {
 	// Create the reply from the request
 	reply, err := dhcpv4.NewReplyFromRequest(req)
 	if err != nil {
@@ -154,8 +159,10 @@ func createReply(req *dhcpv4.DHCPv4, messageType dhcpv4.MessageType, leaseTime u
 	}
 	// Fill in the to be offered client ip
 	dhcpv4.WithYourIP(clientip)(reply)
-	// Fill in the netmask
+	// set Option 1 subnet mask
 	dhcpv4.WithNetmask(clientnetmask.Mask)(reply)
+	// set Option 54 DHCP Server Address
+	reply.UpdateOption(dhcpv4.OptServerIdentifier(serverIP))
 
 	// add router information if specified in deviceinfo
 	if deviceInfo.Gateway != "" {

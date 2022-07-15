@@ -32,11 +32,12 @@ func (srl *NokiaSrl) AdjustReply(req *dhcpv4.DHCPv4, reply *dhcpv4.DHCPv4, devin
 	theUrl := up.GetUrlRelative()
 	// set port, Host and scheme
 	portAsString := strconv.FormatInt(int64(wsinfo.Port), 10)
-	theUrl.Host = fmt.Sprintf("%s:%s", wsinfo.IpFqdn, portAsString)
-	theUrl.Scheme = wsinfo.Protocol
+	host := fmt.Sprintf("%s:%s", wsinfo.IpFqdn, portAsString)
+	scheme := wsinfo.Protocol
 
 	// update / set the DHCP option
-	reply.Options.Update(dhcpv4.OptBootFileName(theUrl.String()))
+	reply.UpdateOption(dhcpv4.OptTFTPServerName(fmt.Sprintf("%s://%s", scheme, host)))
+	reply.UpdateOption(dhcpv4.OptBootFileName(theUrl.String()))
 }
 
 // SetBackend used for late binding of the backend

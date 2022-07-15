@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"net"
 
 	log "github.com/sirupsen/logrus"
 	topov1alpha1 "github.com/yndd/topology/apis/topo/v1alpha1"
@@ -69,14 +70,14 @@ func NewZtpK8sBackend(kubeconfig string) *ZtpK8sBackend {
 	}
 }
 
-func GetWebserverInformation(rc runtimeclient.Client) (*structs.WebserverInfo, error) {
+func (k *ZtpK8sBackend) GetWebserverInformation() (*structs.WebserverInfo, error) {
 	serviceName := "ztp-webserver-yndd"
 	protocolLookupLabel := "ztp.webserver.protocol"
 	// figure out which namespace we are runnning in
 	namespace := utils.DeduceNamespace("ndd-system")
 
 	s := &corev1.Service{}
-	err := rc.Get(context.TODO(), runtimeclient.ObjectKey{
+	err := k.k8sclient.Get(context.TODO(), runtimeclient.ObjectKey{
 		Namespace: namespace,
 		Name:      serviceName,
 	}, s)
@@ -117,8 +118,41 @@ func GetWebserverInformation(rc runtimeclient.Client) (*structs.WebserverInfo, e
 	return wsi, nil
 }
 
-func (k *ZtpK8sBackend) GetWebserverInformation() (*structs.WebserverInfo, error) {
-	return GetWebserverInformation(k.k8sclient)
+func (k *ZtpK8sBackend) GetDhcpserverInformation() (*structs.DhcpServerInfo, error) {
+	serviceName := "ztp-dhcp-yndd"
+	// figure out which namespace we are runnning in
+	namespace := utils.DeduceNamespace("ndd-system")
+
+	s := &corev1.Service{}
+	err := k.k8sclient.Get(context.TODO(), runtimeclient.ObjectKey{
+		Namespace: namespace,
+		Name:      serviceName,
+	}, s)
+
+	if err != nil {
+		return nil, fmt.Errorf("error retrieving ztp-dhcpserver service information from k8s api: %v", err)
+	}
+
+	dsi := &structs.DhcpServerInfo{}
+
+	switch s.Spec.Type {
+	case corev1.ServiceTypeLoadBalancer:
+		if s.Status.LoadBalancer.Ingress[0].IP != "" {
+			dsi.Ip = net.ParseIP(s.Status.LoadBalancer.Ingress[0].IP)
+		}
+		// TODO: maybe as with the webserverinfo process the s.Status.LoadBalancer.Ingress[0].Hostname field ...
+		// have to figure out if simple dns resolution would do the trick to get a usable net.IP
+	case corev1.ServiceTypeClusterIP:
+		if len(s.Spec.ExternalIPs) > 0 {
+			dsi.Ip = net.ParseIP(s.Spec.ExternalIPs[0])
+		}
+	}
+	// check if we found any endpoint information
+	if dsi.Ip == nil {
+		return nil, fmt.Errorf("unable to determine external ClusterIP, ExternalName or ExternalIP for service '%s' in namespace '%s'", serviceName, namespace)
+	}
+
+	return dsi, nil
 }
 
 func (k *ZtpK8sBackend) retrieveTopoNode(checkFunc NodeMatcher, notFoundErrorText string) (*structs.DeviceInformation, error) {
@@ -164,16 +198,17 @@ func (k *ZtpK8sBackend) retrieveTopoNode(checkFunc NodeMatcher, notFoundErrorTex
 
 	// populate the result object
 	result := &structs.DeviceInformation{
-		Name:              result_node.Name,
-		MacAddress:        result_node.Spec.Properties.MacAddress,
-		SerialNumber:      result_node.Spec.Properties.SerialNumber,
-		CIDR:              result_node.Spec.Properties.MgmtIPAddress,
-		Platform:          result_node.Spec.Properties.Platform,
-		VendorType:        result_node.Spec.Properties.VendorType,
-		Gateway:           "",
+		Name:         result_node.Name,
+		MacAddress:   result_node.Spec.Properties.MacAddress,
+		SerialNumber: result_node.Spec.Properties.SerialNumber,
+		CIDR:         result_node.Spec.Properties.MgmtIPAddress,
+		Platform:     result_node.Spec.Properties.Platform,
+		VendorType:   result_node.Spec.Properties.VendorType,
+		// TODO: Gateway needs to come from k8s
+		Gateway:           "192.168.22.1",
 		ExpectedSWVersion: result_node.Spec.Properties.ExpectedSWVersion,
 		NtpServersV4:      []string{},
-		DnsServersV4:      []string{},
+		DnsServersV4:      []string{"8.8.8.8", "1.1.1.1"},
 	}
 	return result, nil
 }

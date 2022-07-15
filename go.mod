@@ -9,7 +9,7 @@ require (
 	github.com/spf13/cobra v1.5.0
 	github.com/yndd/target v0.0.100
 	github.com/yndd/topology v0.0.7
-	github.com/yndd/ztp-webserver v0.0.0-20220713072633-ae8b7b5de73d
+	github.com/yndd/ztp-webserver v0.0.0-20220715121633-e0270a1ca65b
 	k8s.io/api v0.24.2
 	k8s.io/apimachinery v0.24.2
 	k8s.io/client-go v0.24.2

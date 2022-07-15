@@ -53,7 +53,7 @@ $(KUBECTL_NDD): $(LOCALBIN)
 
 .PHONY: update-yndd-dependencies
 update-yndd-dependencies:
-	go get -d github.com/yndd/ztp-webserver
+	go get -d github.com/yndd/ztp-webserver@master
 
 
 MOCKDIR = pkg/mocks

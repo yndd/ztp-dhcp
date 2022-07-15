@@ -2019,6 +2019,8 @@ github.com/yndd/ztp-webserver v0.0.0-20220708150254-1fd1615ed678 h1:DcGEUb+ivnpn
 github.com/yndd/ztp-webserver v0.0.0-20220708150254-1fd1615ed678/go.mod h1:ICD20QLsgq+xOJBENohgnN/my0dSJrLr7WRxCknm11c=
 github.com/yndd/ztp-webserver v0.0.0-20220713072633-ae8b7b5de73d h1:WoD6vh9IjQiN8MiFZFaXQ0wIConfzA6IzqQmnpeLs+U=
 github.com/yndd/ztp-webserver v0.0.0-20220713072633-ae8b7b5de73d/go.mod h1:fkWytzvxZp5mOJHt/4N2y0Yy2ry1oxHJEL6HF5ztzoE=
+github.com/yndd/ztp-webserver v0.0.0-20220715121633-e0270a1ca65b h1:Wqx3tqSJjgb9mWHTYvqLhbitOzvzCCY3CKtUFQR6TuU=
+github.com/yndd/ztp-webserver v0.0.0-20220715121633-e0270a1ca65b/go.mod h1:ltkwipbjQhQeMRApKWC4wm79MUMIJZzRqd0Ar3SzEbY=
 github.com/yudai/gojsondiff v1.0.0/go.mod h1:AY32+k2cwILAkW1fbgxQ5mUmMiZFgLIV+FBNExI05xg=
 github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82/go.mod h1:lgjkn3NuSvDfVJdfcVVdX+jpBxNmX4rDAzaS45IcYoM=
 github.com/yudai/pp v2.0.1+incompatible/go.mod h1:PuxR/8QJ7cyCkFp/aUDS+JY727OFEZkTdatxwunjIkc=

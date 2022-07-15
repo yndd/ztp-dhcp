@@ -47,7 +47,7 @@ func GetClientIdentifier(m *dhcpv4.DHCPv4) (*structs.ClientIdentifier, error) {
 	default: // Type 0 usually is string, we define this as default for now
 		log.Debug("Processing String based ClientIdentifier")
 		cir.CIType = structs.String
-		cir.Value = string(ci[0:])
+		cir.Value = string(ci[1:])
 	}
 
 	log.Debugf("ClientIdentifier: %s", cir.String())

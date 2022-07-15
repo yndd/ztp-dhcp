@@ -3,6 +3,7 @@ package static
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 
@@ -12,8 +13,9 @@ import (
 )
 
 type ZtpStaticBackend struct {
-	datastore            map[string]*structs.DeviceInformation
-	webserverInformation *structs.WebserverInfo
+	datastore             map[string]*structs.DeviceInformation
+	webserverInformation  *structs.WebserverInfo
+	dhcpserverInformation *structs.DhcpServerInfo
 }
 
 // NewZtpStaticBackend constructs a new StaticZTPBackend.
@@ -23,6 +25,12 @@ func NewZtpStaticBackend() *ZtpStaticBackend {
 	log.Infof("Instantiating ZtpStaticBackend")
 	backend := &ZtpStaticBackend{
 		datastore: map[string]*structs.DeviceInformation{},
+		webserverInformation: &structs.WebserverInfo{
+			Port:     80,
+			IpFqdn:   "127.0.0.1",
+			Protocol: "http",
+		},
+		dhcpserverInformation: &structs.DhcpServerInfo{Ip: net.ParseIP("1.2.3.4")},
 	}
 
 	// using the ENV var to provide static config content
@@ -33,8 +41,11 @@ func NewZtpStaticBackend() *ZtpStaticBackend {
 			log.Errorf("error loading static backend data from %s - %v", val, err)
 		}
 	}
-
 	return backend
+}
+
+func (f *ZtpStaticBackend) GetDhcpserverInformation() (*structs.DhcpServerInfo, error) {
+	return f.dhcpserverInformation, nil
 }
 
 func (f *ZtpStaticBackend) GetDeviceInformationByClientIdentifier(cir *structs.ClientIdentifier) (*structs.DeviceInformation, error) {

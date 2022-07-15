@@ -8,7 +8,7 @@ import (
 	"github.com/yndd/ztp-dhcp/pkg/structs"
 )
 
-var managed_models = []string{"DummyDevice"}
+var managed_models = []string{"Dummy"}
 
 type DummyDevice struct {
 	backend backend.ZtpBackend
