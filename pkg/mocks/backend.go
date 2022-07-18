@@ -64,6 +64,21 @@ func (mr *MockZtpBackendMockRecorder) GetDeviceInformationByName(deviceId interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceInformationByName", reflect.TypeOf((*MockZtpBackend)(nil).GetDeviceInformationByName), deviceId)
 }
 
+// GetDhcpserverInformation mocks base method.
+func (m *MockZtpBackend) GetDhcpserverInformation() (*structs.DhcpServerInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDhcpserverInformation")
+	ret0, _ := ret[0].(*structs.DhcpServerInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDhcpserverInformation indicates an expected call of GetDhcpserverInformation.
+func (mr *MockZtpBackendMockRecorder) GetDhcpserverInformation() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDhcpserverInformation", reflect.TypeOf((*MockZtpBackend)(nil).GetDhcpserverInformation))
+}
+
 // GetWebserverInformation mocks base method.
 func (m *MockZtpBackend) GetWebserverInformation() (*structs.WebserverInfo, error) {
 	m.ctrl.T.Helper()
