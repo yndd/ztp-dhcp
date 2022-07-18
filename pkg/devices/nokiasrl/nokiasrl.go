@@ -21,7 +21,7 @@ type NokiaSrl struct {
 // AdjustReply takes the general reply and adjusts the device specific values
 func (srl *NokiaSrl) AdjustReply(req *dhcpv4.DHCPv4, reply *dhcpv4.DHCPv4, devinfo *structs.DeviceInformation) {
 	// generate the url for the config script
-	up := websstructs.NewUrlParamsDeviceName(string(devinfo.VendorType), devinfo.Platform, devinfo.Name, websstructs.Script)
+	up := websstructs.NewUrlParamsDeviceName(string(devinfo.VendorType), devinfo.Platform, devinfo.Name, websstructs.Script).SetFilename("script.py")
 	// retrieve the webserver port host and scheme
 	wsinfo, err := srl.backend.GetWebserverInformation()
 	if err != nil {
