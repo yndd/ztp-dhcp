@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 # Build the manager binary
-FROM golang:1.17 as builder
+FROM golang:1.18 as builder
 WORKDIR /workspace
 COPY . .
 RUN --mount=type=cache,id=ztp-dhcp-golang-dl-cache,target=/go/pkg/mod \
