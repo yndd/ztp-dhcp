@@ -61,11 +61,18 @@ MOCKDIR = pkg/mocks
 .PHONY: mocks-gen
 mocks-gen: mocks-rm ## Generate mocks for all the defined interfaces.
 	go install github.com/golang/mock/mockgen@latest
-	mockgen -package=mock -source=pkg/devices/device.go -destination=$(MOCKDIR)/device.go
-	mockgen -package=mock -source=pkg/backend/backend.go -destination=$(MOCKDIR)/backend.go
-	mockgen -package=mock -source=pkg/devices/devicemanagerhandler.go -destination=$(MOCKDIR)/devicemanagerhandler.go
-	mockgen -package=mock -source=pkg/devices/devicemanagerregistrator.go -destination=$(MOCKDIR)/devicemanagerregistrator.go
+	mockgen -package=mocks -source=pkg/devices/device.go -destination=$(MOCKDIR)/device.go
+	mockgen -package=mocks -source=pkg/backend/backend.go -destination=$(MOCKDIR)/backend.go
+	mockgen -package=mocks -source=pkg/devices/devicemanagerhandler.go -destination=$(MOCKDIR)/devicemanagerhandler.go
+	mockgen -package=mocks -source=pkg/devices/devicemanagerregistrator.go -destination=$(MOCKDIR)/devicemanagerregistrator.go
+	mockgen -package=mocks -destination=$(MOCKDIR)/packetconn.go net PacketConn
 
 .PHONY: mocks-rm
 mocks-rm: ## remove generated mocks
 	rm -rf $(MOCKDIR)/*
+
+.PHONY: test
+test: ## Run test with coverage
+	go test -v -coverprofile coverage.out ./... -coverpkg=./...
+	grep -v '/mocks/' coverage.out > coverage.tmp && mv coverage.tmp coverage.out
+	go tool cover -html coverage.out -o coverage.html

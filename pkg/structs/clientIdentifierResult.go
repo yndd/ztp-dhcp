@@ -29,7 +29,7 @@ func (cir *ClientIdentifier) String() string {
 	result, err := json.Marshal(cir)
 	if err != nil {
 		log.Errorf("Error marshalling ClientIdentifierResult: %v", err)
-		return ""
+		return "ERROR Marshalling"
 	}
 	return string(result)
 }

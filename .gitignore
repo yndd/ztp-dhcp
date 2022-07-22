@@ -1,3 +1,5 @@
 .vscode/
 .vscode/launch.json
 go.work
+coverage.html
+coverage.out

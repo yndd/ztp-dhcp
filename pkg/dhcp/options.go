@@ -3,6 +3,7 @@ package dhcp
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/insomniacslk/dhcp/dhcpv4"
@@ -35,8 +36,8 @@ func GetClientIdentifier(m *dhcpv4.DHCPv4) (*structs.ClientIdentifier, error) {
 		cir.CIType = structs.MAC
 
 		tmpmac := hex.EncodeToString(ci[1:])
-		if len(tmpmac)%2 != 0 {
-			log.Error("MAC Address with uneven characters.")
+		if len(tmpmac) != 12 {
+			return nil, fmt.Errorf("not a valid MAC address: %s", tmpmac)
 		}
 
 		macsl := []string{}

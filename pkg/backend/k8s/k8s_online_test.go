@@ -1,3 +1,7 @@
+//go:build k8sonline
+
+// Use `go test ./... --tags k8sonline` to run these tests.
+// It requires having a working ~/.kube/config present and the k8s cluster reachable
 package k8s
 
 import (

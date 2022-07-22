@@ -5,10 +5,11 @@ import (
 	"net"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"github.com/yndd/ztp-dhcp/pkg/backend/static"
 	_ "github.com/yndd/ztp-dhcp/pkg/devices/all"
-	"github.com/yndd/ztp-dhcp/pkg/dhcp/testutils"
+	"github.com/yndd/ztp-dhcp/pkg/mocks"
 	"github.com/yndd/ztp-dhcp/pkg/structs"
 )
 
@@ -85,15 +86,20 @@ func TestDhcp(t *testing.T) {
 			t.Fail()
 		}
 
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
 		// instantiate a Fake PacketConn, required as a parameter to the handler function
-		packetConn := testutils.NewFakePacketConn()
-		// finally call the handler to process the packet
-		ztpServer.handler(packetConn, &net.IPAddr{}, paket)
-		// perform checks on the packetConn
-		if packetConn.WriteToCalled != entry.SucceedWriteTo {
-			t.Errorf("WriteTo call expected = %s, was %s", testutils.Bool2String(entry.SucceedWriteTo), testutils.Bool2String(packetConn.WriteToCalled))
-			t.Fail()
+		packetConn := mocks.NewMockPacketConn(mockCtrl)
+
+		ipaddr := &net.IPAddr{}
+
+		// if we expect the handler to succeede the Expectation on the Mock is set
+		if entry.SucceedWriteTo {
+			packetConn.EXPECT().WriteTo(gomock.Any(), ipaddr)
 		}
+
+		// finally call the handler to process the packet
+		ztpServer.handler(packetConn, ipaddr, paket)
 	}
 }
 
